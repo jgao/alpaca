@@ -58,7 +58,7 @@ class LongShort:
         try:
             alpaca.submit_order('AAPL', 1, actions[turn % 2], 'market', 'day')
             print(f"submitted {['AAPL', 1, actions[turn % 2], 'market', 'day']}")
-        except e:
+        except Exception as e:
             print(f"failed {['AAPL', 1, actions[turn % 2], 'market', 'day']}")
             print(e)
 
