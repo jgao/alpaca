@@ -56,12 +56,13 @@ class LongShort:
             print(f'cancelled {order.id}')
 
         try:
-            alpaca.submit_order('AAPL', 1, actions[turn % 2], "market", "day")
-            print(f'submitted {['AAPL', 1, actions[turn % 2], "market", "day"]}')
+            alpaca.submit_order('AAPL', 1, actions[turn % 2], 'market', 'day')
+            print(f"submitted {['AAPL', 1, actions[turn % 2], 'market', 'day']}")
         except e:
-            print(f'failed {['AAPL', 1, actions[turn % 2], "market", "day"]}')
+            print(f"failed {['AAPL', 1, actions[turn % 2], 'market', 'day']}")
             print(e)
 
+        turn += 1
         time.sleep(60)
 
     return
