@@ -1,9 +1,10 @@
-#
+# https://github.com/alpacahq/alpaca-trade-api-python/blob/master/examples/long-short.py
 
-import alpaca_trade_api as tradeapi
 import threading
 import time
 import datetime
+
+import alpaca_trade_api as tradeapi
 
 from credentials import API_KEY, API_SECRET, APCA_API_BASE_URL
 
@@ -36,11 +37,33 @@ class LongShort:
       self.alpaca.cancel_order(order.id)
 
     # Wait for market to open.
-    print("Waiting for market to open...")
-    tAMO = threading.Thread(target=self.awaitMarketOpen)
-    tAMO.start()
-    tAMO.join()
-    print("Market opened.")
+    # print("Waiting for market to open...")
+    # tAMO = threading.Thread(target=self.awaitMarketOpen)
+    # tAMO.start()
+    # tAMO.join()
+    # print("Market opened.")
+
+    turn = 0
+    actions = ['buy', 'sell']
+
+    while True:
+        print(f'turn {turn}')
+        # kill all ongoing orders
+        orders = self.alpaca.list_orders(status="open")
+        for order in orders:
+            self.alpaca.cancel_order(order.id)
+            print(f'cancelled {order.id}')
+
+        try:
+            alpaca.submit_order('AAPL', 1, actions[turn % 2], "market", "day")
+            print(f'submitted {['AAPL', 1, actions[turn % 2], "market", "day"]}')
+        except e:
+            print(f'failed {['AAPL', 1, actions[turn % 2], "market", "day"]}')
+            print(e)
+
+        time.sleep(60)
+
+    return
 
     # Rebalance the portfolio every minute, making necessary trades.
     while True:
