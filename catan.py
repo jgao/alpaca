@@ -63,7 +63,7 @@ class LongShort:
             print(e)
 
         turn += 1
-        time.sleep(60)
+        time.sleep(600)
 
     return
 
