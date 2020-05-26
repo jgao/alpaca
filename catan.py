@@ -9,7 +9,86 @@ import alpaca_trade_api as tradeapi
 from credentials import API_KEY, API_SECRET, APCA_API_BASE_URL
 
 
-class LongShort:
+class ArbSP500:
+    def __init__(self):
+        self.alpaca = tradeapi.REST(API_KEY, API_SECRET, APCA_API_BASE_URL, 'v2')
+
+        self.universe = ['SPY', 'IVV', 'VOO', 'UPRO', 'SPXL']
+
+    # Wait for market to open.
+    def awaitMarketOpen(self):
+        isOpen = self.alpaca.get_clock().is_open
+        while(not isOpen):
+            clock = self.alpaca.get_clock()
+            openingTime = clock.next_open.replace(tzinfo=datetime.timezone.utc).timestamp()
+            currTime = clock.timestamp.replace(tzinfo=datetime.timezone.utc).timestamp()
+            timeToOpen = int((openingTime - currTime) / 60)
+            print(str(timeToOpen) + " minutes til market open.")
+            time.sleep(60)
+            isOpen = self.alpaca.get_clock().is_open
+
+    def order(self, stock, qty, action):
+        try:
+          self.alpaca.submit_order(stock, qty, action, 'market', 'day')
+          print(f"submitted {[stock, qty, action, 'market', 'day']}")
+        except Exception as e:
+          print(f"failed {[stock, qty, action, 'market', 'day']}")
+          print(e)
+
+
+    def run(self):
+        print('starting')
+        # First, cancel any existing orders so they don't impact our buying power.
+        orders = self.alpaca.list_orders(status="open")
+        for order in orders:
+            self.alpaca.cancel_order(order.id)
+            print(f'cancelling {order}')
+
+        # Wait for market to open.
+        print("Waiting for market to open...")
+        tAMO = threading.Thread(target=self.awaitMarketOpen)
+        tAMO.start()
+        tAMO.join()
+        print("Market opened.")
+
+        while True:
+            print(f'Waking up at {datetime.datetime.now()}')
+
+            if not self.alpaca.get_clock().is_open:
+                print('market is closed. goodbye')
+                return
+
+            # kill all ongoing orders
+            orders = self.alpaca.list_orders(status="open")
+            for order in orders:
+                self.alpaca.cancel_order(order.id)
+                print(f'cancelled {order.id}')
+
+            avg_factor = {}
+
+            series = self.alpaca.get_barset(self.universe, 'minute', 120)
+            for stock in self.universe:
+                avg_c = sum([datapoint.c for datapoint in series[stock]])
+                avg_c = 1.0 * avg_c / len(series[stock])
+
+                avg_factor[stock] = series[stock][-1].c / avg_c
+
+            ranked = sorted(avg_factor, key=avg_factor.get)
+            print(ranked)
+            print(avg_factor)
+
+            overpriced = ranked[-1]
+            underpriced = ranked[0]
+
+            print(f'underpriced: {underpriced}; overpriced: {overpriced}')
+
+            self.order(underpriced, 1, 'buy')
+            self.order(overpriced, 1, 'sell')
+
+            time.sleep(60)
+
+
+'''class LongShort:
   def __init__(self):
     self.alpaca = tradeapi.REST(API_KEY, API_SECRET, APCA_API_BASE_URL, 'v2')
 
@@ -346,7 +425,10 @@ class LongShort:
 
     # Sort the stocks in place by the percent change field (marked by pc).
     self.allStocks.sort(key=lambda x: x[1])
-
+'''
 # Run the LongShort class
-ls = LongShort()
-ls.run()
+# ls = LongShort()
+# ls.run()
+
+sp500arb = ArbSP500()
+sp500arb.run()
