@@ -43,7 +43,7 @@ class ArbSP500:
     def neutralize_position(self, position):
         stock = position.symbol
         action = 'buy' if int(position.qty) < 0 else 'sell'
-        qty = abs(position.qty)
+        qty = abs(int(position.qty))
 
         print(f'neutralizing {position}')
         self.order(stock, qty, action)
