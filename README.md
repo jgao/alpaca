@@ -23,4 +23,5 @@ Startup log:
 - experimentation system that allows multiple strategies to be run - A/B
 - DB integration to track trades
 - backtesting system - how do we get the data, abstraction of strategy?
-- system to alert if bot fails. slack integration? allows human decision input through integration  
+- system to alert if bot fails. slack integration? allows human decision input through integration
+- unit testing - bot fails when I'm still asleep  

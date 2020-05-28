@@ -51,7 +51,7 @@ class ArbSP500:
 
     def neutralize_all_positions(self):
         for pos in self.alpaca.list_positions():
-            neutralize_position(pos)
+            self.neutralize_position(pos)
 
 
     def run(self):
