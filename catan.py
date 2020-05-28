@@ -14,6 +14,9 @@ class ArbSP500:
         self.alpaca = tradeapi.REST(API_KEY, API_SECRET, APCA_API_BASE_URL, 'v2')
 
         self.universe = ['SPY', 'IVV', 'VOO', 'UPRO', 'SPXL']
+        self.buy_limit = 10000
+        self.sell_limit = 5000
+
 
     # Wait for market to open.
     def awaitMarketOpen(self):
@@ -27,6 +30,7 @@ class ArbSP500:
             time.sleep(60)
             isOpen = self.alpaca.get_clock().is_open
 
+
     def order(self, stock, qty, action):
         try:
           self.alpaca.submit_order(stock, qty, action, 'market', 'day')
@@ -34,6 +38,20 @@ class ArbSP500:
         except Exception as e:
           print(f"failed {[stock, qty, action, 'market', 'day']}")
           print(e)
+
+
+    def neutralize_position(self, position):
+        stock = position.symbol
+        action = 'buy' if position.qty < 0 else 'sell'
+        qty = abs(position.qty)
+
+        print(f'neutralizing {position}')
+        self.order(stock, qty, action)
+
+
+    def neutralize_all_positions(self):
+        for pos in self.alpaca.list_positions():
+            neutralize_position(pos)
 
 
     def run(self):
@@ -64,6 +82,8 @@ class ArbSP500:
                 self.alpaca.cancel_order(order.id)
                 print(f'cancelled {order.id}')
 
+            self.neutralize_all_positions()
+
             avg_factor = {}
 
             series = self.alpaca.get_barset(self.universe, 'minute', 120)
@@ -82,8 +102,8 @@ class ArbSP500:
 
             print(f'underpriced: {underpriced}; overpriced: {overpriced}')
 
-            self.order(underpriced, 1, 'buy')
-            self.order(overpriced, 1, 'sell')
+            self.order(underpriced, self.buy_limit // series[underpriced][-1].c, 'buy')
+            self.order(overpriced, self.sell_limit // series[overpriced][-1].c, 'sell')
 
             time.sleep(60)
 
